@@ -13,12 +13,25 @@ TIMEOUT="${3:-30}"
 BATCH_SIZE="${4:-5000}"
 LOG_DIR="$RUNTIME_DIR/build-logs"
 
-mkdir -p "$LOG_DIR"
+DRV_DIR="$LOG_DIR/_drvpath"
+EVAL_DIR="$LOG_DIR/_eval"
+
+mkdir -p "$LOG_DIR" "$DRV_DIR" "$EVAL_DIR"
 
 build_package() {
   local name="$1"
   local escaped_name=$(python3 -c "print('.'.join(f'\"{x}\"' for x in '$name'.split('.')))")
+
   local out_log="$LOG_DIR/${name}.log"
+  local drv_file="$DRV_DIR/${name}.drvpath"
+  local eval_err_file="$EVAL_DIR/${name}.evalError"
+
+  echo "Evaluating: $name"
+  if ! nix eval --raw --impure --expr "(import $NIXPKGS_PATH {}).${escaped_name}.drvPath" \
+    > "$drv_file" 2> "$eval_err_file"; then
+    echo "@@@ [EVAL_FAIL] @@@" | tee -a "$out_log"
+    return 0
+  fi
 
   echo "Starting build: $escaped_name"
   out_log="$LOG_DIR/${name}.log"
@@ -45,7 +58,7 @@ build_package() {
 }
 
 export -f build_package
-export LOG_DIR TIMEOUT NIXPKGS_PATH
+export LOG_DIR DRV_DIR EVAL_DIR TIMEOUT NIXPKGS_PATH
 
 CHUNK_DIR=$(mktemp -d)
 trap 'rm -rf "$CHUNK_DIR"' EXIT
