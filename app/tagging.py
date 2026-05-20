@@ -10,6 +10,13 @@ class ErrorCheck:
 
 TAG_CHECKS = [
     ErrorCheck(
+        name="aclocal/missing-deps",
+        pattern=r"aclocal: error: couldn't open directory '.*': No such file or directory",
+        hints=[
+            "error: aclocal failed with exit status: 1",
+        ],
+    ),
+    ErrorCheck(
         name="cmake/boost 1.89",
         pattern=r"CMake Error at",
         hints=[
@@ -32,6 +39,14 @@ TAG_CHECKS = [
             "cmake flags:",
             "CMakeLists.txt",
             "-- Configuring incomplete, errors occurred!",
+        ],
+    ),
+    ErrorCheck(
+        name="patchelf/missing-deps",
+        pattern=r"auto-patchelf: \d+ dependencies could not be satisfied",
+        hints=[
+            "auto-patchelf could not satisfy dependency",
+            "auto-patchelf failed to find all the required dependencies",
         ],
     ),
     ErrorCheck(
@@ -113,6 +128,11 @@ TAG_CHECKS = [
         hints=["SBCL is free software"],
     ),
     ErrorCheck(
+        name="sbcl-missing-component",
+        pattern=r"BUILD FAILED: Component .* not found",
+        hints=["SBCL is free software"],
+    ),
+    ErrorCheck(
         name="generic/missing-header",
         pattern=r": No such file or directory",
         hints=["#include <", "compilation terminated."],
@@ -129,8 +149,13 @@ TAG_CHECKS = [
     ),
     ErrorCheck(
         name="generic/hunk-failed",
-        pattern=r"(hunks? FAILED -- saving rejects|1 out of 1 hunk ignored)",
+        pattern=r"(hunks? FAILED -- saving rejects|\d+ out of \d+ hunk ignored)",
         hints=["Hunk #", "applying patch"],
+    ),
+    ErrorCheck(
+        name="generic/hunk-ignored",
+        pattern=r"(hunks ignored -- saving rejects|\d+ out of \d+ hunk ignored)",
+        hints=["Skipping patch", "applying patch"],
     ),
     ErrorCheck(
         name="generic/substitute-error",
@@ -141,6 +166,10 @@ TAG_CHECKS = [
         name="generic/substitute-error",
         pattern=r"substitute\(\): ERROR:",
         hints=["does not exist"],
+    ),
+    ErrorCheck(
+        name="generic/broken-symlink",
+        pattern=r"ERROR: noBrokenSymlinks: found \d+ dangling symlinks, \d+ reflexive symlinks and \d+ unreadable symlinks",
     ),
     ErrorCheck(
         name="unknown",
