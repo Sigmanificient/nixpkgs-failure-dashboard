@@ -39,6 +39,7 @@ SKIP_BUILD_LOG_IF_MATCHES = (
     "nix-store --add-fixed",
     "nix-prefetch-url",
     "config.cplex.releasePath = /path/to/download",
+    "set the environment variable NIX_ITCHIO_API_KEY",
     # licenses based derivation
     "Microsoft Software License Terms are not accepted",
     "commercial license of Silverfort",
