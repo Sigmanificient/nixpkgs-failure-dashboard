@@ -26,13 +26,7 @@ NIXPKGS_PATH=$(nix eval --impure --expr "
 if [ ! -f ".run" ]; then
   nix eval --impure --json --expr "
     (import ./collect-packages.nix) {
-      pkgs = import $NIXPKGS_PATH {
-        config = {
-          allowAliases = false;
-          allowUnfree = true;
-          recursionMode = \"hydra\";
-        };
-      };
+      pkgs = import $NIXPKGS_PATH (import ./config.nix);
     }" -vv > "$RUNTIME_DIR/all_packages.json"
 
   cat $RUNTIME_DIR/all_packages.json \
