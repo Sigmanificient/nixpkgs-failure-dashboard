@@ -96,6 +96,10 @@ TAG_CHECKS = [
         hints=[r"==== short test summary info ===="],
     ),
     ErrorCheck(
+        name="python/missing-toPythonModule",
+        pattern=r"error: .* should use `buildPythonPackage` or `toPythonModule` if it is to be part of the Python packages set.",
+    ),
+    ErrorCheck(
         name="c-compile-error", pattern=r"\S+\.[ch]{1,2}:\d+:\d+: error:"
     ),
     ErrorCheck(
@@ -168,8 +172,17 @@ TAG_CHECKS = [
         hints=["does not exist"],
     ),
     ErrorCheck(
+        name="generic/missing-file",
+        pattern=r"No such file or directory",
+        hints=["error:"],
+    ),
+    ErrorCheck(
         name="generic/broken-symlink",
         pattern=r"ERROR: noBrokenSymlinks: found \d+ dangling symlinks, \d+ reflexive symlinks and \d+ unreadable symlinks",
+    ),
+    ErrorCheck(
+        name="generic/out-of-space",
+        pattern=r"note: build failure may have been caused by lack of free disk space",
     ),
     ErrorCheck(
         name="unknown",
