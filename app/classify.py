@@ -15,7 +15,7 @@ CSV_URL = (
     "https://raw.githubusercontent.com/"
     "Sigmanificient/nixpkgs-failure-notify"
     "/refs/heads/results"
-    "/results/3-failures-x86_64-linux.csv"
+    "/results/trunk/3-failures-x86_64-linux.csv"
 )
 
 GENERIC_ERROR_RE = re.compile(
