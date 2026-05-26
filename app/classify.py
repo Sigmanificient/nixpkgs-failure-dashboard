@@ -40,17 +40,6 @@ SKIP_BUILD_LOG_IF_MATCHES = (
     "nix-prefetch-url",
     "config.cplex.releasePath = /path/to/download",
     "set the environment variable NIX_ITCHIO_API_KEY",
-    # licenses based derivation
-    "Microsoft Software License Terms are not accepted",
-    "commercial license of Silverfort",
-    "android_sdk.accept_license = true",
-    "dyalog.acceptLicense = true",
-    "input-fonts.acceptLicense",
-    "joypixels.acceptLicense = true",
-    "nvidia.acceptLicense = true",
-    "sc2-headless.accept_license = true",
-    "segger-jlink.acceptLicense = true",
-    "xxe-pe.acceptLicense = true",
 )
 
 
