@@ -5,7 +5,7 @@
     if lib.isDerivation pkg
     then ["${prefix}${name}"]
     else if pkg.recurseForDerivations or false || pkg.recurseForRelease or false
-    then packagesWith "${name}." pkg
+    then packagesWith "${prefix}${name}." pkg
     else [];
 
   packagesWith = prefix: set:
