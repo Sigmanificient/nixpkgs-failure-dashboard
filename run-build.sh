@@ -20,11 +20,31 @@ build_package() {
   local escaped_name=$(python3 -c "print('.'.join(f'\"{x}\"' for x in '$name'.split('.')))")
   local out_log="$LOG_DIR/${name}.log"
 
-  echo "Starting build: $escaped_name"
   out_log="$LOG_DIR/${name}.log"
   if [[ -f "$out_log" ]] && tail -n 1 "$out_log" | grep -q "@@@ \[.*\] @@@"; then
+    echo "Skipping build: $escaped_name"
     return 0
   fi
+
+  drv_path=$(NIXPKGS_ALLOW_UNFREE=1 nix eval --impure --raw --expr \
+    "(import $NIXPKGS_PATH {}).${escaped_name}.drvPath" \
+      | cut -d'/' -f 4- || echo "")
+
+  if [[ -n "$drv_path" ]]; then
+    echo "Checking cache for $drv_path"
+
+    if curl -sSf "https://cache.nixos.org/log/$drv_path" \
+      --compressed \
+        -H 'Connection: keep-alive' \
+        -H 'User-Agent: NFD Fetcher' \
+        -H 'Pragma: no-cache' \
+        -H 'Cache-Control: no-cache' > "$out_log"; then
+      echo "@@@ [CACHED] @@@" | tee -a "$out_log"
+      return 0;
+    fi
+  fi
+
+  echo "Cache miss. Starting build: $escaped_name"
 
   NIXPKGS_ALLOW_UNFREE=1 timeout "$TIMEOUT" \
     nix-build -E "(import $NIXPKGS_PATH {}).${escaped_name}" \
