@@ -108,6 +108,32 @@ function LogLine({
   );
 }
 
+function CopyButton({ textToCopy }: { textToCopy: string }) {
+  const [isCopied, setIsCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+      setIsCopied(true);
+
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 1000);
+    } catch (err) {
+      console.error('Failed to copy text: ', err);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleCopy}
+      className={`btn ${isCopied && "btn-on"}`}
+    >
+      {isCopied ? 'Copied!' : 'Copy'}
+    </button>
+  );
+}
+
 function LogViewer({
   logContent,
   errorLineNumber,
@@ -142,6 +168,7 @@ function LogViewer({
             Jump to Error
           </button>
         )}
+        <CopyButton textToCopy={logContent} />
       </div>
       <List
         listRef={listRef}

@@ -290,11 +290,10 @@ a {
   background: #b7cefd;
   color: black;
 
-  &:hover {
+  &:hover, &-on {
     background: none;
     color: #b7cefd;
     border: 1px solid #b7cefd;
-
   }
 }
 
