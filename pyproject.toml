@@ -15,6 +15,7 @@ dependencies = [
 ]
 
 [project.scripts]
+nfd-build = "app.builder:main"
 nixpkgs-failure-dashboard = "app.main:main"
 classify-build-logs = "app.classify:main"
 dummy-setup = "app.dummy_setup:main"
