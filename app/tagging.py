@@ -105,6 +105,11 @@ TAG_CHECKS = [
         hints=["Executing pythonMetadataCheckPhase", "pyprojectVersionPatchHook"]
     ),
     ErrorCheck(
+        name="python/missing-metadata",
+        pattern=r"importlib.metadata.PackageNotFoundError: No package metadata was found for",
+        hints=["pythonMetadataCheckPhase"]
+    ),
+    ErrorCheck(
         name="c-compile-error", pattern=r"\S+\.[ch]{1,2}:\d+:\d+: error:"
     ),
     ErrorCheck(
