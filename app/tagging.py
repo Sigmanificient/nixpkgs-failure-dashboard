@@ -100,6 +100,11 @@ TAG_CHECKS = [
         pattern=r"error: .* should use `buildPythonPackage` or `toPythonModule` if it is to be part of the Python packages set.",
     ),
     ErrorCheck(
+        name="python/dist-info-mismatch",
+        pattern=r"but \.dist-info/METADATA specifies version",
+        hints=["Executing pythonMetadataCheckPhase", "pyprojectVersionPatchHook"]
+    ),
+    ErrorCheck(
         name="c-compile-error", pattern=r"\S+\.[ch]{1,2}:\d+:\d+: error:"
     ),
     ErrorCheck(
