@@ -16,32 +16,7 @@ LOG_DIR="$RUNTIME_DIR/build-logs"
 mkdir -p "$LOG_DIR"
 
 build_package() {
-  local name="$1"
-  local escaped_name=$(python3 -c "print('.'.join(f'\"{x}\"' for x in '$name'.split('.')))")
-  local out_log="$LOG_DIR/${name}.log"
-
-  echo "Starting build: $escaped_name"
-  out_log="$LOG_DIR/${name}.log"
-  if [[ -f "$out_log" ]] && tail -n 1 "$out_log" | grep -q "@@@ \[.*\] @@@"; then
-    return 0
-  fi
-
-  timeout "$TIMEOUT" \
-    nix-build -E "(import $NIXPKGS_PATH (import ./config.nix)).${escaped_name}" \
-      --max-jobs 1 \
-      --cores 1 \
-      --no-link \
-      2>&1 | tee "$out_log"
-
-  status=${PIPESTATUS[0]}
-
-  if [ $status -eq 0 ]; then
-    echo "@@@ [SUCCESS] @@@" | tee -a "$out_log"
-  elif [ $status -eq 124 ]; then
-    echo "@@@ [TIMEOUT] @@@" | tee -a "$out_log"
-  else
-    echo "@@@ [FAIL] @@@" | tee -a "$out_log"
-  fi
+  nfd-build --nixpkgs-path="$NIXPKGS_PATH" --log-dir="$LOG_DIR" "$1"
 }
 
 export -f build_package
