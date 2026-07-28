@@ -5,11 +5,12 @@ import { useSearchParams } from "react-router-dom";
 import "./App.scss";
 
 interface Build {
-  id: number;
   attrpath: string;
   hydra_id: number | null;
   tag: string;
   error_line_number: number | null;
+  last_success_rev: string | null;
+  last_success_date: string | null;
 }
 
 interface Commit {
@@ -356,7 +357,14 @@ export default function App() {
 
         <div className="panel panel-right">
           <div className="log-meta">
-            <h2>Log Viewer</h2>
+            <div className="log-meta-header">
+              <h2>Log Viewer</h2>
+              { selectedBuild && (
+                selectedBuild.last_success_date
+                  ? <p>Last succeeded: {prettifyDate(selectedBuild.last_success_date)} (<a href={`https://github.com/NixOS/nixpkgs/commit/${selectedBuild.last_success_rev}`}>{selectedBuild.last_success_rev!.slice(0, 7)}</a>)</p>
+                  : <p>No successful build recorded</p>
+              )}
+            </div>
             {selectedBuild ? (
             <>
                 <p>

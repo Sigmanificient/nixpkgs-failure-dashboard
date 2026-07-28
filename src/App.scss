@@ -326,6 +326,16 @@ a {
   gap: 1em;
 }
 
+.log-meta-header {
+  display: flex;
+  align-items: baseline;
+  gap: 1em;
+
+  p {
+    margin-left: auto;
+  }
+}
+
 .log-actions {
   display: flex;
   align-items: center;

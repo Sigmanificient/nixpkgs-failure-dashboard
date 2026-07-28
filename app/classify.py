@@ -1,5 +1,6 @@
 import csv
 import io
+import json
 import os
 import re
 import urllib.request
@@ -7,7 +8,7 @@ from collections import defaultdict
 from contextlib import contextmanager
 
 from .config import RUNTIME_DIR, BUILD_LOGS_DIR
-from .db import get_db, reset_db
+from .db import get_db, init_db
 from .models import Build
 from .tagging import TAG_CHECKS, ErrorCheck
 
@@ -16,10 +17,6 @@ CSV_URL = (
     "Sigmanificient/nixpkgs-failure-notify"
     "/refs/heads/results"
     "/results/trunk/3-failures-x86_64-linux.csv"
-)
-
-GENERIC_ERROR_RE = re.compile(
-    r"(error:|Error:|ERROR|FAILED|fatal:|Failed)", re.IGNORECASE
 )
 
 
@@ -59,10 +56,6 @@ def get_status(log: str) -> str:
     return "failed"
 
 
-def is_hash_mismatch(log: str) -> bool:
-    return "error: hash mismatch in fixed-output derivation" in log
-
-
 def run_tag_check(rev_log: str, check: ErrorCheck) -> int | None:
     matched = re.search(check.pattern, rev_log)
 
@@ -78,7 +71,7 @@ def run_tag_check(rev_log: str, check: ErrorCheck) -> int | None:
 
 def find_error_and_tag(log: str) -> tuple[str, int | None]:
     lines = log.splitlines()
-    reversed_log = '\n'.join(lines[::-1])
+    reversed_log = "\n".join(lines[::-1])
 
     for check in TAG_CHECKS:
         line_num = run_tag_check(reversed_log, check)
@@ -89,53 +82,94 @@ def find_error_and_tag(log: str) -> tuple[str, int | None]:
 
 
 def main():
-    builds = []
     logs = sorted(
         BUILD_LOGS_DIR / entry
         for entry in os.listdir(BUILD_LOGS_DIR)
         if entry.endswith(".log")
     )
 
-    reset_db()
+    commit = json.loads((RUNTIME_DIR / "last-commit.json").read_text())
+    commit_rev = commit["rev"]
+    commit_date = commit["date"]
+
+    init_db()
     hydra_ids = fetch_hydra_ids()
     count = 0
-
     per_tags = defaultdict(list)
+    seen_attrpaths = set()
 
     with contextmanager(get_db)() as session:
+        existing: dict[str, Build] = {
+            b.attrpath: b for b in session.query(Build).all()
+        }
+
         for logfile in logs:
             attrpath = logfile.name.removesuffix(".log")
             print("processing", attrpath)
 
             log = logfile.read_bytes().decode(errors="ignore")
-            if get_status(log) != "failed":
+            status = get_status(log)
+            seen_attrpaths.add(attrpath)
+
+            if status == "success":
+                if attrpath in existing:
+                    b = existing[attrpath]
+                    b.tag = "success"
+                    b.hydra_id = hydra_ids.get(attrpath)
+                    b.error_line_number = None
+                    b.last_success_rev = commit_rev
+                    b.last_success_date = commit_date
+                else:
+                    session.add(
+                        Build(
+                            attrpath=attrpath,
+                            hydra_id=hydra_ids.get(attrpath),
+                            tag="success",
+                            error_line_number=None,
+                            last_success_rev=commit_rev,
+                            last_success_date=commit_date,
+                        )
+                    )
+                continue
+
+            if status != "failed":
                 continue
 
             if (
                 any(text in log for text in SKIP_BUILD_LOG_IF_MATCHES)
-                or log == "@@@ [FAIL] @@@\n" # empty log
+                or log == "@@@ [FAIL] @@@\n"
             ):
                 continue
 
-            matches = re.findall("error: attribute '.*' missing\n", log)
-            if matches:
+            if re.search("error: attribute '.*' missing\n", log):
                 continue
 
             tag, error_line = find_error_and_tag(log)
 
-            build = Build(
-                attrpath=attrpath,
-                hydra_id=hydra_ids.get(attrpath),
-                tag=tag,
-                error_line_number=error_line,
-            )
+            if attrpath in existing:
+                b = existing[attrpath]
+                b.tag = tag
+                b.hydra_id = hydra_ids.get(attrpath)
+                b.error_line_number = error_line
+            else:
+                b = Build(
+                    attrpath=attrpath,
+                    hydra_id=hydra_ids.get(attrpath),
+                    tag=tag,
+                    error_line_number=error_line,
+                    last_success_rev=None,
+                    last_success_date=None,
+                )
+                session.add(b)
 
-            per_tags[build.tag].append(build)
-            builds.append(build)
+            per_tags[tag].append(attrpath)
             count += 1
 
+        for attrpath, b in existing.items():
+            if attrpath not in seen_attrpaths:
+                session.delete(b)
+
         print("Registered", count, "packages")
-        session.add_all(builds)
         session.commit()
 
         print("\nTagged:")

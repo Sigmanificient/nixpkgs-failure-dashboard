@@ -6,8 +6,9 @@ Base = declarative_base()
 class Build(Base):
     __tablename__ = "builds"
 
-    id: Mapped[int] = mapped_column(primary_key=True)
-    attrpath: Mapped[str]
+    attrpath: Mapped[str] = mapped_column(primary_key=True)
     hydra_id: Mapped[int | None]
     tag: Mapped[str]
     error_line_number: Mapped[int | None]
+    last_success_rev: Mapped[str | None]
+    last_success_date: Mapped[str | None]

@@ -30,7 +30,9 @@ async def lifespan(_: FastAPI):
                 Build.hydra_id,
                 Build.tag,
                 Build.error_line_number,
-            )
+                Build.last_success_rev,
+                Build.last_success_date,
+            ).where(Build.tag != "success")
         ).all()
 
     state["builds"] = []
@@ -49,6 +51,8 @@ async def lifespan(_: FastAPI):
                 "hydra_id": b.hydra_id,
                 "tag": b.tag,
                 "error_line_number": b.error_line_number,
+                "last_success_rev": b.last_success_rev,
+                "last_success_date": b.last_success_date,
             }
         )
 
