@@ -29,10 +29,7 @@ if [ ! -f ".run" ]; then
       pkgs = import $NIXPKGS_PATH (import ./config.nix);
     }" -vv > "$RUNTIME_DIR/all_packages.json"
 
-  cat $RUNTIME_DIR/all_packages.json \
-    | tr -d '["]' \
-    | tr ',' '\n' \
-    > "$RUNTIME_DIR/all_packages"
+  jq -r '.[]' "$RUNTIME_DIR/all_packages.json" > "$RUNTIME_DIR/all_packages"
 
   touch $RUNTIME_DIR/.run
 fi

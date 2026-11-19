@@ -1,24 +1,27 @@
 {pkgs}: let
   inherit (pkgs) lib;
+  inherit (lib)
+    isAttrs
+    isDerivation
+    showAttrPath
+    mapAttrsToList
+    concatLists
+    recurseIntoAttrs
+    ;
 
-  collect = prefix: pkg: name:
-    if lib.isDerivation pkg
-    then ["${prefix}${name}"]
-    else if pkg.recurseForDerivations or false || pkg.recurseForRelease or false
-    then packagesWith "${prefix}${name}." pkg
-    else [];
-
-  packagesWith = prefix: set:
-    lib.flatten (
-      lib.mapAttrsToList (
-        name: pkg: let
-          result = builtins.tryEval (collect prefix pkg name);
-        in
-          if result.success
-          then result.value
-          else []
-      )
-      set
-    );
+  # Stripped down version of
+  # https://github.com/NixOS/nixpkgs/blob/a94513cdee868f1398fccc3a6b424857eb44a43f/pkgs/top-level/packages-info.nix
+  getPackages = path: value:
+    if path == [ "AAAAAASomeThingsFailToEvaluate" ] || !(isAttrs value) then
+      [ ]
+    else if isDerivation value then
+      [ (showAttrPath path) ]
+    else if value.recurseForDerivations or false then
+      lib.pipe value [
+        (mapAttrsToList (name: value: getPackages (path ++ [ name ]) value))
+        concatLists
+      ]
+    else
+      [ ];
 in
-  packagesWith "" pkgs
+  getPackages [ ] (recurseIntoAttrs pkgs)
