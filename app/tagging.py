@@ -66,6 +66,11 @@ TAG_CHECKS = [
         ],
     ),
     ErrorCheck(
+        name="python/build-deps",
+        pattern=r"ERROR Unmet dependencies",
+        hints=["Getting build dependencies for wheel"],
+    ),
+    ErrorCheck(
         name="python/missing-legacy-setup",
         pattern=r"Traceback \(most recent call last\):",
         hints=[
@@ -92,8 +97,13 @@ TAG_CHECKS = [
     ),
     ErrorCheck(
         name="python/pytest-failure",
-        pattern=r"=========+.*(errors?|failed)",
+        pattern=r"==+.*(errors?|failed)",
         hints=[r"==== short test summary info ===="],
+    ),
+    ErrorCheck(
+        name="python/unittest-failure",
+        pattern=r"FAILED \((failures|errors)",
+        hints=[r"unittestCheckPhase"],
     ),
     ErrorCheck(
         name="python/missing-toPythonModule",
@@ -106,8 +116,22 @@ TAG_CHECKS = [
     ),
     ErrorCheck(
         name="python/missing-metadata",
-        pattern=r"importlib.metadata.PackageNotFoundError: No package metadata was found for",
+        pattern=r"No package metadata was found for",
         hints=["pythonMetadataCheckPhase"]
+    ),
+    ErrorCheck(
+        name="python/duplicated-dependency",
+        pattern=r"Found duplicated packages in closure for dependency",
+        hints=["pythonCatchConflictsPhase"]
+    ),
+    ErrorCheck(
+        name="python/not-python-project",
+        pattern=r"ERROR Source .* does not appear to be a Python project: no pyproject.toml or setup.py",
+        hints=[r"pypaBuildPhase"],
+    ),
+    ErrorCheck(
+        name="python/disabled-test-path",
+        pattern=r"Disabled tests path glob \".*\" does not match any paths. Aborting",
     ),
     ErrorCheck(
         name="c-compile-error", pattern=r"\S+\.[ch]{1,2}:\d+:\d+: error:"
@@ -154,7 +178,7 @@ TAG_CHECKS = [
     ErrorCheck(
         name="generic/fetch-error",
         pattern=r"error: cannot download .* from any mirror",
-        hints=["curl: (", "Warning: Problem"],
+        hints=["curl: ("],
     ),
     ErrorCheck(
         name="generic/hash-mismatch",
