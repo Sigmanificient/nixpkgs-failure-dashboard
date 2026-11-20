@@ -17,17 +17,16 @@ mkdir -p "$LOG_DIR"
 
 build_package() {
   local name="$1"
-  local escaped_name=$(python3 -c "print('.'.join(f'\"{x}\"' for x in '$name'.split('.')))")
   local out_log="$LOG_DIR/${name}.log"
 
-  echo "Starting build: $escaped_name"
+  echo "Starting build: $name"
   out_log="$LOG_DIR/${name}.log"
   if [[ -f "$out_log" ]] && tail -n 1 "$out_log" | grep -q "@@@ \[.*\] @@@"; then
     return 0
   fi
 
   timeout "$TIMEOUT" \
-    nix-build -E "(import $NIXPKGS_PATH (import ./config.nix)).${escaped_name}" \
+    nix-build -E "(import $NIXPKGS_PATH (import ./config.nix)).${name}" \
       --max-jobs 1 \
       --cores 1 \
       --no-link \
